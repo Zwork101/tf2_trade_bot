@@ -6,7 +6,7 @@ import importlib
 import pip
 from enum import Enum
 import logging
-
+import datetime
 
 apikey = ''
 password = ''
@@ -26,6 +26,7 @@ past_time = time.time()
 
 logging.basicConfig(filename='trade.log', level=logging.DEBUG,
                     format='[%(asctime)s][%(levelname)s][%(name)s]: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+
 
 start_text = """
   _____    _____  ____         _____    ____        _      ____  U _____ u       ____     U  ___ u _____   
@@ -93,6 +94,7 @@ class TradeManager:
                 self.client.decline_trade_offer(trade.id)
                 self._declined_trades.append(trade.id)
                 logging.info(f'DECLINED TRADE: {trade.id}\nREASON: Nothing of interest')
+		trade_log("Trade declined: Nothing of interest.")
                 continue
 
             if sell_value > buy_value:
@@ -104,6 +106,9 @@ class TradeManager:
                 print(f'[TRADE]: Looks good! They gave us:\n{str(trade.items_to_receive)}')
                 print(f'[TRADE]: We gave them:\n{str(trade.items_to_give)}')
                 print('[TRADE]: Attempting to accept offer')
+		trade_log(f"Accepting a trade: Get value is {buy_value} with {trade.items_to_receive}. "
+		f"Give value is {sell_value} with {trade.items_to_give}.")
+								
                 try:
                     logging.info(f"ATTEMPTING TRADE: {trade.id}\nSELL: {sell_value} BUY:{buy_value}\n{trade.trade}")
                     self.accept(trade)
@@ -118,6 +123,8 @@ class TradeManager:
                 print(f'[TRADE]: For our:\n{str(trade.items_to_give)}')
                 print('[TRADE]: Declining offer')
                 logging.info(f"DECLINING INVALID TRADE: {trade.id}\nSELL: {sell_value} BUY:{buy_value}\n{trade.trade}")
+		trade_log(f"Declining a trade: Get value is {buy_value} with {trade.items_to_receive}. "
+		f"Give value is {sell_value} with {trade.items_to_give}.")
                 self.client.decline_trade_offer(trade.id)
                 self._declined_trades.append(trade.id)
                 self._pending_trades.remove(trade)
@@ -131,9 +138,11 @@ class TradeManager:
                 id64 = 76561197960265728 + new_trade['accountid_other']
                 trade = Trade(new_trade, id64)
                 logging.info(f"FOUND NEW TRADE: {trade.id}")
+		trade_log("Found new trade.")
                 if str(id64) in whitelist:
                     print(f"[WHITELIST]: Neat! This trade is whitelisted! Attempting confirmation (STEAM ID:{id64})")
                     logging.info(f'TRADE WHITELISTED ATTEMPTING TRADE: {trade.id}')
+		    trade_log("Trade is from a whitelisted user")	
                     self.accept(trade)
                     self._trades.append(trade)
                     continue
@@ -141,6 +150,7 @@ class TradeManager:
                 if self._check_partner(trade):
                     if not accept_escrow and trade.escrow:
                         print("[TRADE]: Trade is escrow, declining")
+			trade_log("Declining an escrow trade...")
                         logging.info(f'DECLINING ESCROW TRADE: {trade.trade}')
                         self.client.decline_trade_offer(trade.id)
                         self._declined_trades.append(trade.id)
@@ -152,7 +162,6 @@ class TradeManager:
         print("[TRADE]: Checking for trade bans for backpack.tf and steamrep.com")
         rJson = requests.get(f"https://backpack.tf/api/users/info/v1?",
                              data={'key':bkey, 'steamids':trade.other_steamid}).json()
-
         logging.debug(str(rJson))
         if "bans" in rJson['users'][trade.other_steamid].keys():
             if "steamrep_caution" in rJson['users'][trade.other_steamid]['bans'] or \
@@ -160,6 +169,7 @@ class TradeManager:
                 print("[steamrep.com]: WARNING SCAMMER")
                 print('[TRADE]: Ending trade...')
                 logging.info(f"DECLINED SCAMMER (ID:{trade.other_steamid})")
+		trade_log("Declining a trade from a scammer...")
                 self.client.decline_trade_offer(trade.id)
                 self._declined_trades.append(trade.id)
                 return False
@@ -169,6 +179,7 @@ class TradeManager:
                 print('[backpack.tf]: WARNING SCAMMER')
                 print('[TRADE]: Ending trade...')
                 logging.info(f"DECLINED SCAMMER (ID:{trade.other_steamid})")
+		trade_log("Declining a trade from a scammer...")
                 self.client.decline_trade_offer(trade.id)
                 self._declined_trades.append(trade.id)
                 return False
@@ -183,22 +194,27 @@ class TradeManager:
             status = trade.status()
             if status == TradeOfferStatus.INVALID.value:
                 print(f'[ERROR]: Trade offer id {trade.id} seems to be invalid')
+		trade_log("Trade became invalid.")
                 self._trades.remove(trade)
                 logging.warning(f'TRADE {trade.id} BECAME invalid')
             elif status == TradeOfferStatus.CANCELED.value:
                 print(f'[TRADE]: Trade {trade.id} was canceled.')
+		trade_log("Trade was canceled.")
                 self._trades.remove(trade)
                 logging.warning(f'TRADE {trade.id} BECAME canceled')
             elif status == TradeOfferStatus.EXPIRED.value:
                 print(f'[TRADE]: Trade {trade.id} has expired... How did that happen?')
+		trade_log("Trade expired.")
                 self._trades.remove(trade)
                 logging.warning(f'TRADE {trade.id} BECAME expired')
             elif status == TradeOfferStatus.INVALID_ITEMS.value:
                 print(f'[TRADE]: Items attempting to trade became invalid. {trade.id}')
+		trade_log("Items in trade became invalid.")
                 self._trades.remove(trade)
                 logging.warning(f'TRADE {trade.id} BECAME invalid_items')
             elif status == TradeOfferStatus.ESCROW.value and not accept_escrow:
                 print('[ERROR]: Whoops, escrow trade was confirmed. Sorry about that')
+		trade_log("An escrow trade was confirmed. Bad luck.")
                 self._trades.remove(trade)
                 logging.fatal(f'ACCEPTED ESCROW TRADE')
 
@@ -210,12 +226,14 @@ class TradeManager:
                 print(f'[TRADE]: Accepted trade {trade.id}')
                 self._trades.remove(trade)
                 logging.info(f'TRADE {trade.id} WAS ACCEPTED')
+		trade_log("Trade accepted.")
 
         for tradeid in self._try_confs:
             try:
                 self.conf.send_trade_allow_request(tradeid)
                 print(f'[TRADE]: Accepted trade {tradeid}')
                 logging.info(f'TRADE {tradeid} WAS ACCEPTED (after manual confirmation)')
+		trade_log("Trade accepted after manual confirmation.")
             except ConfirmationExpected:
                 logging.debug(f'CONFIRMATION FAILED ON {tradeid}')
 
@@ -273,6 +291,14 @@ class Trade:
     def status(self):
         trade_json = client.get_trade_offer(self.id)['response']['offer']
         return trade_json['trade_offer_state']
+
+def curr_time():
+    return str(datetime.datetime.now())
+
+
+def trade_log(msg):
+    with open('trade_log.txt') as file:
+	file.write(f'[{curr_time()}] - {msg}')
 
 def check_for_updates():
     with open('__version__', 'r') as file:
@@ -550,6 +576,7 @@ if __name__ == '__main__':
             print('[PROGRAM]: Cooling down... (10)')
 
         except InterruptedError:
+						user_log.close()
             os._exit(0)
 
         except BaseException as BE:
