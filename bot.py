@@ -297,7 +297,7 @@ def curr_time():
 
 
 def trade_log(msg):
-    with open('trade_log.txt') as file:
+    with open('trade_log.txt', 'a') as file:
 	file.write(f'[{curr_time()}] - {msg}')
 
 def check_for_updates():
