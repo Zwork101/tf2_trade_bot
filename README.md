@@ -1,5 +1,5 @@
 # the TF2 trade bot!
-This is a steam trade bot that trades TF2 items, automatically! Easy to setup, for non-developers!
+This is a steam trade bot that trades TF2 items, automatically! Easy to setup, even for non-developers!
 
 # Installation
 If you have "git" installed, you can just type
@@ -26,3 +26,7 @@ This bot was made completely by me, Zwork101. It is under the MIT license. I am 
  * add 2 seperate logs, one for debugging, one for trades
  * add ability to sync bot's trades with backpack.tf
  * add GUI?
+ 
+ ## Links
+[Join the Discord](https://discord.gg/BdBBSNj)
+[Send an item donation](https://steamcommunity.com/tradeoffer/new/?partner=309304171&token=szB7nNk9)
