@@ -29,4 +29,5 @@ This bot was made completely by me, Zwork101. It is under the MIT license. I am 
  
  ## Links
 [Join the Discord](https://discord.gg/BdBBSNj)
+
 [Send an item donation](https://steamcommunity.com/tradeoffer/new/?partner=309304171&token=szB7nNk9)
