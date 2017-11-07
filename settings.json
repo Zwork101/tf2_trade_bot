@@ -3,7 +3,7 @@
   "apikey": "steamAPI key",
   "password": "username",
   "username": "password",
-  "bkey":"backpack.tf key",
+  "bkey":"backpack.tf api key",
   "accept_escrow":0,
   "decline_trades":1,
   "confirm_options":"trades"
