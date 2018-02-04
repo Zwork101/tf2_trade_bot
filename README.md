@@ -1,4 +1,7 @@
 # the TF2 trade bot!
+
+**Note:** This bot is not in active development. There are many known issues with this bot, that will **never** get fixed. A new bot is in the works - please [join the discord](https://discord.gg/w2hNAy3) for updates.
+
 This is a steam trade bot that trades TF2 items, automatically! Easy to setup, for non-developers!
 
 # Installation
